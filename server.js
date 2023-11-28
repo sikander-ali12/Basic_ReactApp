@@ -19,10 +19,6 @@ db.connect((err) => {
     }
     console.log('Connected to the database');
 });
-app.get('/',(req,res)=>{
-    res.send("Hello sikander")
-})
-
 app.get('/users', (req, res) => {
     const sql = "SELECT * FROM users";
     db.query(sql, (err, data) => {
