@@ -26,7 +26,7 @@ app.get('/users', (req, res) => {
         return res.json(data);
     })
 })
-app.post('/createuser', (req, res) => {
+app.post('/', (req, res) => {
     const { name, email, password } = req.headers;
     const sql = "INSERT INTO users (name, email, pass) VALUES (?, ?, ?)";
     
