@@ -14,10 +14,12 @@ const db = mysql.createConnection({
     database: 'freedb_sikander'
 });
 
+// Handle connection error more gracefully
 db.connect((err) => {
     if (err) {
         console.error('Error connecting to database:', err);
-        return;
+        // Handle the error gracefully, for example, by terminating the application
+        process.exit(1);
     }
     console.log('Connected to the database');
 });
