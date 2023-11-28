@@ -30,7 +30,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Something went wrong!' });
 });
 
-app.get('/users', (req, res) => {
+app.get('/users', (req, res, next) => {
     const sql = "SELECT * FROM users";
     db.query(sql, (err, data) => {
         if (err) {
@@ -41,7 +41,7 @@ app.get('/users', (req, res) => {
     });
 });
 
-app.post('/', (req, res) => {
+app.post('/', (req, res, next) => {
     const { name, email, password } = req.headers;
     const sql = "INSERT INTO users (name, email, pass) VALUES (?, ?, ?)";
     
