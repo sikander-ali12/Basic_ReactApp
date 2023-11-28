@@ -7,21 +7,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 
-const db = mysql.createConnection({
+// Create a connection pool instead of a single connection
+const pool = mysql.createPool({
     host: "sql.freedb.tech",
     user: 'freedb_sikander',
     password: '6vc64FdH2kue&$g',
-    database: 'freedb_sikander'
-});
-
-// Handle connection error more gracefully
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to database:', err);
-        // Handle the error gracefully, for example, by terminating the application
-        process.exit(1);
-    }
-    console.log('Connected to the database');
+    database: 'freedb_sikander',
+    connectionLimit: 10, // Adjust as needed
 });
 
 // Error handling middleware
@@ -30,28 +22,58 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: 'Something went wrong!' });
 });
 
+// Example of handling database connection errors more gracefully
+pool.getConnection((err, connection) => {
+    if (err) {
+        console.error('Error connecting to database:', err);
+        // Handle the error gracefully, for example, by terminating the application
+        process.exit(1);
+    }
+
+    console.log('Connected to the database');
+
+    // Release the connection back to the pool after use
+    connection.release();
+});
+
 app.get('/users', (req, res, next) => {
-    const sql = "SELECT * FROM users";
-    db.query(sql, (err, data) => {
+    pool.getConnection((err, connection) => {
         if (err) {
-            // Call the error handling middleware
             return next(err);
         }
-        return res.json(data);
+
+        const sql = "SELECT * FROM users";
+
+        connection.query(sql, (err, data) => {
+            connection.release();
+
+            if (err) {
+                return next(err);
+            }
+
+            return res.json(data);
+        });
     });
 });
 
 app.post('/', (req, res, next) => {
-    const { name, email, password } = req.headers;
-    const sql = "INSERT INTO users (name, email, pass) VALUES (?, ?, ?)";
-    
-    db.query(sql, [name, email, password], (err, result) => {
+    pool.getConnection((err, connection) => {
         if (err) {
-            // Call the error handling middleware
             return next(err);
         }
 
-        return res.json({ success: true, message: "User registered successfully" });
+        const { name, email, password } = req.headers;
+        const sql = "INSERT INTO users (name, email, pass) VALUES (?, ?, ?)";
+
+        connection.query(sql, [name, email, password], (err, result) => {
+            connection.release();
+
+            if (err) {
+                return next(err);
+            }
+
+            return res.json({ success: true, message: "User registered successfully" });
+        });
     });
 });
 
