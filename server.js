@@ -1,16 +1,18 @@
 const express = require('express');
 const mysql = require('mysql2');
-const cors = require('cors')
-const app = express()
+const cors = require('cors');
+const app = express();
+
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
-app.use(cors())
+app.use(cors());
+
 const db = mysql.createConnection({
     host: "sql.freedb.tech",
     user: 'freedb_sikander',
     password: '6vc64FdH2kue&$g',
     database: 'freedb_sikander'
-})
+});
 
 db.connect((err) => {
     if (err) {
@@ -19,26 +21,39 @@ db.connect((err) => {
     }
     console.log('Connected to the database');
 });
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ success: false, message: 'Something went wrong!' });
+});
+
 app.get('/users', (req, res) => {
     const sql = "SELECT * FROM users";
     db.query(sql, (err, data) => {
-        if (err) return res.json(err);
+        if (err) {
+            // Call the error handling middleware
+            return next(err);
+        }
         return res.json(data);
-    })
-})
+    });
+});
+
 app.post('/', (req, res) => {
     const { name, email, password } = req.headers;
     const sql = "INSERT INTO users (name, email, pass) VALUES (?, ?, ?)";
     
     db.query(sql, [name, email, password], (err, result) => {
-        
-        if (err) return res.json(err);
+        if (err) {
+            // Call the error handling middleware
+            return next(err);
+        }
 
         return res.json({ success: true, message: "User registered successfully" });
     });
 });
 
-const port=process.env.Port || 8081
+const port = process.env.PORT || 8081;
 app.listen(port, () => {
-    console.log("server started at port :",port);
-})
+    console.log("Server started at port:", port);
+});
