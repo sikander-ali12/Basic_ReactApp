@@ -38,6 +38,7 @@ app.post('/', (req, res) => {
     });
 });
 
-app.listen(8081, () => {
-    console.log("listening");
+const port=process.env.Port || 8081
+app.listen(port, () => {
+    console.log("server started at port :",port);
 })
